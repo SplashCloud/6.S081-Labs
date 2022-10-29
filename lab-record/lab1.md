@@ -17,15 +17,15 @@ $ sudo apt-get install git build-essential gdb-multiarch qemu-system-misc gcc-ri
 
 完成之后可以测试一下
 
-![image-20220922225256161](lab1.assets/image-20220922225256161.png)
+![image-20221029212121280](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212121280.png)
 
 然后到[lab页](https://pdos.csail.mit.edu/6.828/2021/labs/util.html) clone相应的代码
 
-![image-20220922225422099](lab1.assets/image-20220922225422099.png)
+![image-20221029212134633](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212134633.png)
 
 最后执行 `make qemu`，出现
 
-![image-20220922225507880](lab1.assets/image-20220922225507880.png)
+![image-20221029212150813](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212150813.png)
 
 即为搭建成功
 
@@ -37,11 +37,11 @@ $ sudo apt-get install git build-essential gdb-multiarch qemu-system-misc gcc-ri
 
 2、其中一个输入：make qemu-gdb
 
-![image-20221013011721320](lab1.assets/image-20221013011721320.png)
+![image-20221029212206029](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212206029.png)
 
 3、另一个输入：gdb-multiarch kernel/kernel
 
-![image-20221013011811262](lab1.assets/image-20221013011811262.png)
+![image-20221029212223488](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212223488.png)
 
 4、可以使用gdb命令进行调试了
 
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]){
 
 这个函数的实现需要重点理解`pipe`函数（xv6-book的Chapter One）
 
-![image-20221015234829633](lab1.assets/image-20221015234829633.png)
+![image-20221029212234931](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212234931.png)
 
 感性的理解，`pipe`就是创建了一个管道，使得两个进程之间可以通信（互相读取到对方写的数据）
 
@@ -116,7 +116,7 @@ main(int argc, char *argv[]){
 
 需要好好理解下面[这幅图](https://swtch.com/~rsc/thread/)和上面的`pipe`
 
-![image-20221015235750038](lab1.assets/image-20221015235750038.png)
+![image-20221029212246450](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212246450.png)
 
 思想：在每个进程中，选取一个素数`N`（就是通过管道读到的第一个数），然后把所有读到的数中不能被整除`N`的数继续通过管道写进下一个进程中，而把可以整除的数`drop`掉。
 

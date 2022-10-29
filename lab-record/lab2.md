@@ -99,7 +99,7 @@ syscall(void)
 
 > 注意第四个测试有可能会超时，需要修改 gradelib.py 文件的第 428 行 扩大时间限制
 
-![image-20221025183213897](lab2.assets/image-20221025183213897.png)
+![image-20221029212319005](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212319005.png)
 
 ## 3 Sysinfo
 
@@ -163,4 +163,4 @@ freemem(void){
 
 测试结果
 
-![image-20221026102047693](lab2.assets/image-20221026102047693.png)
+![image-20221029212340499](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212340499.png)
