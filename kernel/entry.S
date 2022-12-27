@@ -9,18 +9,8 @@ _entry:
         # stack0 is declared in start.c,
         # with a 4096-byte stack per CPU.
         # sp = stack0 + (hartid * 4096)
-
-        # load address
-        # la rd, symbol
-        # the address of symbol => x[rd]
         la sp, stack0
-        # load immediate
-        # li rd, imm
-        # imm => x[rd]
         li a0, 1024*4
-        # csrr: control and status register read
-        # csrr rd, csr
-        # the value in csr => x[rd]
 	csrr a1, mhartid
         addi a1, a1, 1
         mul a0, a0, a1

@@ -3,7 +3,6 @@
 #include "user/user.h"
 #include "kernel/fs.h"
 
-// return the file_name or dir_name in current dir 
 char*
 fmtname(char *path)
 {
@@ -31,13 +30,11 @@ ls(char *path)
   struct dirent de;
   struct stat st;
 
-  // open the file
   if((fd = open(path, 0)) < 0){
     fprintf(2, "ls: cannot open %s\n", path);
     return;
   }
 
-  // place info about the opened file into *st
   if(fstat(fd, &st) < 0){
     fprintf(2, "ls: cannot stat %s\n", path);
     close(fd);
@@ -45,12 +42,10 @@ ls(char *path)
   }
 
   switch(st.type){
-  // file: just print the info of it... 
   case T_FILE:
     printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
     break;
 
-  // dir
   case T_DIR:
     if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
       printf("ls: path too long\n");
@@ -59,7 +54,6 @@ ls(char *path)
     strcpy(buf, path);
     p = buf+strlen(buf);
     *p++ = '/';
-    // printf("the buf: %s\n", buf); buf: dir_name/
     while(read(fd, &de, sizeof(de)) == sizeof(de)){
       if(de.inum == 0)
         continue;
@@ -81,14 +75,11 @@ main(int argc, char *argv[])
 {
   int i;
 
-  // just 'ls'
-  // no other argument
-  // show the files and dirs in current dir 
   if(argc < 2){
     ls(".");
     exit(0);
   }
   for(i=1; i<argc; i++)
-    ls(argv[i]); // show the all the files or dirs designated by the arguments
+    ls(argv[i]);
   exit(0);
 }

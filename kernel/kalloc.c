@@ -34,7 +34,7 @@ void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
-  p = (char*)PGROUNDUP((uint64)pa_start);
+  p = (char*)PGROUNDUP((uint64)pa_start); // PGROUNDUP ensures it free aligned physical address
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
 }
@@ -52,6 +52,7 @@ kfree(void *pa)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
+  // cause such code to break faster
   memset(pa, 1, PGSIZE);
 
   r = (struct run*)pa;
@@ -79,4 +80,15 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+uint64
+freemem(void){
+  struct run* r = kmem.freelist;
+  int num = 0;
+  while(r){
+    r = r->next;
+    num++;
+  }
+  return num * PGSIZE;
 }

@@ -9,13 +9,9 @@
 
 static int loadseg(pde_t *pgdir, uint64 addr, struct inode *ip, uint offset, uint sz);
 
-// exec
-// path: cmd
-// argv[0]: cmd
 int
 exec(char *path, char **argv)
 {
-  // printf("%s\n%s\n", path, argv[0]);
   char *s, *last;
   int i, off;
   uint64 argc, sz = 0, sp, ustack[MAXARG], stackbase;

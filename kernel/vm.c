@@ -61,8 +61,8 @@ kvminit(void)
 void
 kvminithart()
 {
-  w_satp(MAKE_SATP(kernel_pagetable));
-  sfence_vma();
+  w_satp(MAKE_SATP(kernel_pagetable)); // from this statement, all address become virtual.
+  sfence_vma(); // flush the current cpu's TLB
 }
 
 // Return the address of the PTE in page table pagetable
