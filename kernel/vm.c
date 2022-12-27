@@ -61,8 +61,10 @@ kvminit(void)
 void
 kvminithart()
 {
-  w_satp(MAKE_SATP(kernel_pagetable)); // from this statement, all address become virtual.
-  sfence_vma(); // flush the current cpu's TLB
+  // write the address of root page-table page into the register `satp`
+  // from then on, CPU begin page translation
+  w_satp(MAKE_SATP(kernel_pagetable));
+  sfence_vma();
 }
 
 // Return the address of the PTE in page table pagetable
@@ -432,3 +434,30 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+#ifdef LAB_PGTBL
+int level = 1;
+void
+vmprint(pagetable_t pagetable){
+
+  if(level > 3) return;
+
+  if(level == 1)
+    printf("page table %p\n", pagetable);
+
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if (pte & PTE_V){ // print valid page
+      for(int j = 0; j < level; j++){
+        printf("..");
+        if(j != level - 1) printf(" ");
+      }
+      uint64 child = PTE2PA(pte);
+      printf("%d: pte %p pa %p\n", i, pte, child);
+      level++;
+      vmprint((pagetable_t)child);
+      level--;
+    }
+  }
+}
+#endif

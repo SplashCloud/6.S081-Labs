@@ -46,7 +46,7 @@ exec(char *path, char **argv)
       continue;
     if(ph.memsz < ph.filesz)
       goto bad;
-    if(ph.vaddr + ph.memsz < ph.vaddr)
+    if(ph.vaddr + ph.memsz < ph.vaddr) // check whether the sum will overflow a 64-bits integer
       goto bad;
     uint64 sz1;
     if((sz1 = uvmalloc(pagetable, sz, ph.vaddr + ph.memsz)) == 0)
@@ -116,6 +116,11 @@ exec(char *path, char **argv)
   p->trapframe->sp = sp; // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
 
+  #ifdef LAB_PGTBL
+  if(p->pid == 1)
+    vmprint(p->pagetable);
+  #endif
+  
   return argc; // this ends up in a0, the first argument to main(argc, argv)
 
  bad:

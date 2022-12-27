@@ -1,166 +1,135 @@
-# Lab Syscall
+# Lab page tables
 
 
 
-## 1. Preview
+## 0 lecture 4 & chapter 3
 
-### 1.1 xv6-book Chap2
+### Lecture 4
 
-xv6-book的第二章和lecture3的内容类似，主要介绍了操作系统的组织结构，从物理资源的抽象、用户态/内核态、系统调用、微内核/宏内核以及代码层面展开
+### Chapter 3 Page tables
 
-xv6-book的4.3、4.4节讲的是如何进行系统调用
+#### xv6的页表映射机制
 
-### 1.2 code
+![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144537100.png)
 
-了解xv6启动过程
+#### xv6 内核地址空间
 
-`_entry.S`中将`stack0+4096`赋给栈指针寄存器`sp`，使得其指向栈顶，然后`call start`
+![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144757600.png)
 
-`start` => `main` => `userinit` => `initcode.S` => `init.c`
+#### xv6的页表代码
 
+> `vm.c`
 
+核心数据结构：==pagetable_t==
 
-## 2 System call tracing
+核心函数：==walk== 和 ==mappages==
 
-`trace`是一个工具，能够记录指定的系统调用。
+#### 物理地址分配代码
 
-```shell
-$ trace 32 grep hello README
-3: syscall read -> 1023
-3: syscall read -> 966
-3: syscall read -> 70
-3: syscall read -> 0
-```
+> `kalloc.c`
 
-```shell
-# 命令的格式
-$ trace [MASK] [OPTIONS...] # 其中[MASK]是一个数字n; 如果 (n >> i) & 1 == 1 表示i号系统调用需要trace
-# 输出的形式
-[pid]: syscall <name> -> <return_value>
-```
+核心数据结构：==kmem==
 
-首先需要明确的是`trace`也是一个系统调用，所以就需要大概明白从用户态调用`trace`工具到内核调用对应的系统调用的过程。
+核心函数：==kfree== 和 ==kalloc==
 
-根据手册的指示大概能够推测出来
+#### 进程地址空间
 
-1、在命令行中输入：`trace 32 grep hello README` 后，实际上是执行 /user/trace.c 文件。过程就是 先执行 `trace` 函数，然后再执行后面的命令。
+![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225152730759.png)
 
-2、这个 trace 函数是需要在  /user/user.h 文件中定义原型的，之后好像就找不到对应的实现了。其实之后的实现是在内核态了，需要先陷入内核，手册中说要在 /user/usys.pl 中定义一个 stub: `entry("trace")`，这个stub会在 user/usys.S 生成一段汇编代码：进行系统调用。
+#### 系统调用：sbrk 和 exec
 
-3、其中的`ecall`指令就会调用 /kernel/syscall.c 中的 `syscall` 函数，执行对应的系统调用函数 sys_<name>
+**sbrk**：为一个进程去减少或者增加它的内存（`kernel/sysproc.c`）
 
-然后就可以开始根据手册的提示写代码了...
+**exec**：创建一个地址空间的用户部分
 
-1. 在 kernel/sysproc.c 中增加 sys_trace() 函数
-2. 要在 proc 结构体中增加一个新的变量存储 trace 的参数
-3. 修改 syscall() 函数来打印 trace 输出
-4. 修改 fork() 函数使得 trace 的参数从父进程拷贝到子进程
+> <font color='red'>what is trampoline?</font>
+>
+> trampoline page存储了用户空间和内核空间相互切换的代码，无论是在内核空间还是在用户空间它都映射在相同的虚拟地址，这样在切换之后还可以继续工作。
+>
+> 相关文章：[What is trampoline?](https://xiayingp.gitbook.io/build_a_os/traps-and-interrupts/untitled-3)
+>
+> <font color='red'>what is trapframe?</font>
+>
+> `trapframe`是存在于用户地址空间，位于`trampoline`下面的大小为`PGSIZE`（4096字节）的一块内存，用于在用户地址空间向内核地址空间切换时保存用户空间的寄存器。
 
-```c
-// 在 kernel/sysproc.c 中增加 sys_trace 函数
-uint64
-sys_trace(void){
-  int n;
-  if( argint(0, &n) < 0 ){
-    return -1;
-  }
-  // parse the `n` to get which sys_call need to be traced
-  struct proc* p = myproc();
-  p->trace_mask = n;
-  
-  return 0;
-}
-```
+## 1 Speed up system calls
+
+<u>任务描述</u>：加速`getpid()`系统调用。方法是在`trapframe`前面映射一个只读的页，在这个页的开始，存储一个结构体`syscall`，结构体里存储当前进程的`pid`，然后通过已经提供的`ugetpid()`函数获得`pid`。
+
+<u>思路</u>：可以参考`trapframe`的构造。
 
 ```c
-// 修改 kernel/syscall.c 中的 syscall 函数
+// 步骤
+// 1. 在proc结构体中增加一个usyscall字段
+// 2. 在allocproc()函数为usyscall分配空间，并且将pid存储在usyscall中
+// 3. 在proc_pagetable()函数中将p->usyscall（物理地址）映射到USYSCALL（虚拟地址）
+// 4. 在freeproc()函数中将usyscall的空间释放
+// 5. 在proc_freepagetable()函数中取消之前建立的映射
+```
+
+## 2 Print a page table
+
+<u>任务描述</u>：如题要求打印页表。
+
+<u>思路</u>：参考`freewalk`函数进行递归。
+
+```c
+int level = 1;
 void
-syscall(void)
-{
-  int num;
-  struct proc *p = myproc();
-
-  num = p->trapframe->a7; // a7: sys_call number
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    p->trapframe->a0 = syscalls[num]();
-    // add the trace check
-    if( (( p->trace_mask >> num ) & 1) == 1 ){ // need to trace
-      printf("%d: syscall %s -> %d\n", p->pid, sys_call_names[num], p->trapframe->a0);
+vmprint(pagetable_t pagetable){
+    if(level > 3) return;
+    
+    if(level == 1)
+        printf("page table %p\n", pagetable);
+    
+    for(int i = 0; i < 512; i++){
+        pte_t pte = pagetable[i];
+        if(pte & PTE_V){
+            for(int j = 0; j < level; j++){
+                printf("..");
+                if(j != level - 1) printf(" ");
+            }
+            uint64 child = PTE2PA(pte);
+            printf("%d: pte %p pa %p\n", i, pte, child);
+            level++;
+            vmprint((pagetable_t)child);
+            level--;
+        }
     }
-  } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
-    p->trapframe->a0 = -1;
-  }
 }
 ```
 
-测试结果
+## 3 Detecting which pages have been accessed
 
-> 注意第四个测试有可能会超时，需要修改 gradelib.py 文件的第 428 行 扩大时间限制
+<u>任务描述</u>：检测页表是否被访问，实现`pgaccess`系统调用。
 
-![image-20221029212319005](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212319005.png)
-
-## 3 Sysinfo
-
-还是实现一个系统调用，在内核填上 `struct sysinfo` 的两个字段，并拷贝回用户空间，主要过程：
-
-1. 像`trace`那样，在对应位置增加系统调用所需的相关信息。
-2. 在 `kernel/proc.c` 中增加一个统计 `not UNUSED process` 的函数
-3. 在 `kernel/kalloc.c` 中增加一个统计 `free memory` 的函数
-4. 理解 `copyout` 函数，在系统调用中将 `struct sysinfo` 从内核空间 拷贝入 用户空间
-
-核心代码
+<u>思路</u>：通过`walk`函数找到虚拟地址对应的`pte`，检查`PTE_A`位即可。
 
 ```c
-// need to copy the sysinfo struct from kernel space to user space
-uint64
-sys_sysinfo(void){
-  uint64 addr;
-  if( argaddr(0, &addr) < 0 ){
-    return -1;
-  }
-  struct sysinfo si;
-  si.nproc = notunusedproc();
-  si.freemem = freemem();
-  struct proc* p = myproc();
-  if( copyout(p->pagetable, addr, (char *)(&(si)), sizeof(si)) < 0 ){
-    return -1;
-  }
-  return 0;
-}
-```
-
-统计 不是 UNUSED 的 进程数量，只需要遍历 proc 数组即可。
-
-```c
-uint64
-notunusedproc(void){
-  int num = 0;
-  for(int i = 0; i < NPROC; i++){
-    if(proc[i].state != UNUSED){
-      num++;
+// sysproc.c
+int
+sys_pgaccess(void){
+    uint64 base;
+    int len;
+    uint64 mask;
+    if(argaddr(0, &base) < 0 || argint(1, &len) < 0 || argaddr(2, &mask) < 0)
+        return -1;
+    
+    uint64 start = PGROUNDDOWN(base);
+    uint64 bitmask = 0L;
+    for(int i = 0; i < len; i++, start += PGSIZE){
+        pte_t *pte = walk(myproc()->pagetable, start, 0);
+        if(pte == 0) return -1; // page not map
+        uint64 flag = (*pte & PTE_A) >> 6;
+        if(flag){
+            *pte ^= PTE_A; // clear the PTE_A
+        }
+        bitmask |= (flag << i);
     }
-  }
-  return num;
+    if(copyout(myproc()->pagetable, mask, (char *)&bitmask, sizeof(uint64)) < 0)
+        return -1;
+    return 0;
 }
 ```
 
-统计 free memory，需要读一下 `kalloc.c` 的代码，会发现 在 `kalloc` 函数中，如果 `kmem.freelist` 不为空的话就会分配一个 `PGSIZE` 的内存空间，所以只需要统计 `kmem.freelist` 链表长度即可。
-
-```c
-uint64
-freemem(void){
-  struct run* r = kmem.freelist;
-  int num = 0;
-  while(r){
-    r = r->next;
-    num++;
-  }
-  return num * PGSIZE;
-}
-```
-
-测试结果
-
-![image-20221029212340499](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221029212340499.png)
+> :zap:访问页表时将`PTE_A`置1的工作由RISC-V硬件做了，在代码中不需要自己设置。
