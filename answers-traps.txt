@@ -1,0 +1,29 @@
+1. Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf? 
+a0, a1, a2, ... will contain the arguments to functions. (in printf, register a2 holds 13)
+
+2. Where is the call to function f in the assembly code for main? Where is the call to g? (Hint: the compiler may inline functions.) 
+i think because function f and g is so simple that the compiler inline the two functions.
+So in main, the code does not invoke the function f, instead it gets the function result directly, and maybe it is the optimization of compiler or something.
+
+3. At what address is the function printf located? 
+"34:	600080e7          	jalr	1536(ra) # 630 <printf>"
+So the address is 0x630
+
+4. What value is in the register ra just after the jalr to printf in main? 
+0x30
+
+5. the output is "HE110 World". 
+the little-endian means least significant bit store in the lowest address
+and the big-endian means most significant bit store in the lowest address
+because the RISC-V is little-endian, so the `i` will store like 
+
+address   little-endian   big-endian
+0x00           0x72          0x00
+0x01           0x6c          0x64
+0x02           0x64          0x6c
+0x03           0x00          0x72
+
+so in the big-endian, the `i` should be "0x726c6400"
+and do not need to change the value `57616`
+
+6. I think the value in register a2 will be printed after y.
