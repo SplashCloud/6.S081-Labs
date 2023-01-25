@@ -10,11 +10,11 @@
 
 #### xv6的页表映射机制
 
-![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144537100.png)
+![](https://my-pictures-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144537100.png)
 
 #### xv6 内核地址空间
 
-![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144757600.png)
+![](https://my-pictures-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225144757600.png)
 
 #### xv6的页表代码
 
@@ -34,7 +34,7 @@
 
 #### 进程地址空间
 
-![](https://my-picture-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225152730759.png)
+![](https://my-pictures-repo.obs.cn-east-3.myhuaweicloud.com/my-blog-imgs/image-20221225152730759.png)
 
 #### 系统调用：sbrk 和 exec
 
