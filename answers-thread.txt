@@ -1,0 +1,25 @@
+the race-condition will happen in `insert` function:
+
+1 static void 
+2 insert(int key, int value, struct entry **p, struct entry *n)
+3 {
+4   struct entry *e = malloc(sizeof(struct entry));
+5   e->key = key;
+6   e->value = value;
+7   e->next = n;
+8   *p = e;
+9 }
+
+when there are 2 threads: t1 and t2.
+
+thinking about this condition: t1 want to insert a new key 
+while t2 also want to insert a new key, and the keys will be insert into the same position
+so they will both invoke the insert function
+
+when t1 invokes `insert` and is interrupted at line 7,
+then t2 invokes `insert` and also is interrupted at line 7
+
+at the moment, t1 create a entry which points to the table[i]
+and t2 create a entry which also points to the table[i]
+
+then no matter who executes the line 8 first, there will be a entry missing...
