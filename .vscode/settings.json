@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "riscv.h": "c",
+        "types.h": "c",
+        "future": "c",
+        "mutex": "c"
+    }
+}
