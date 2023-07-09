@@ -303,7 +303,7 @@ bget(uint dev, uint blockno)
     // until the new target buffer appears.
     // when the new target buffer appears, should release the previous bucket's lock
     if (!b || b->lastuse > b0->lastuse) {
-      b = b0; // update the buffer
+      b = b0; // update the bufferß
       if (bucket_idx != -1) release(&bcache.buckets[bucket_idx].lock); // release the prev lock
       bucket_idx = i; // update the lock
     } else {

@@ -134,6 +134,11 @@ kfree(void *pa)
   release(&mems[id].lock);
 }
 
+/**
+ * steal the mem from other cpu's freelist
+ * when a cpu's freelist was run out of.
+ * @param id the id of the cpu which want to steal the mem from.
+*/
 struct run *
 stealmem(int id) {
   struct run *r;
@@ -153,14 +158,11 @@ stealmem(int id) {
 void *
 kalloc(void)
 {
-
-
   struct run *r;
 
   push_off();
   int id = cpuid();
   pop_off();
-
 
   acquire(&mems[id].lock);
   r = mems[id].freelist;
@@ -177,7 +179,7 @@ kalloc(void)
   }
 
   if (r)
-    memset((char *)r, 5, PGSIZE);
+    memset((char *)r, 5, PGSIZE); // fill with junk data
 
   return (void *)r;
 }
